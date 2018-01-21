@@ -22,7 +22,7 @@ from datetime import datetime
 
 class ForexFeatures:
     
-    def __init__(self, df):
+    def __init__(self, df, *arg, **kwargs):
         self.dataframe = df
     
             
@@ -39,4 +39,29 @@ class ForexFeatures:
         df = pd.concat((HAopen,HAhigh,HAlow,HAclose), axis=1)
         df.columns = [['open','high','close','low']]    
         return df
+    
+    def detrend(self,method='difference'):
+        """
+        
+        :param prices: dataframe of OHLC currency data
+        :param method: method by which to detrend 'linear' or 'difference'
+        :return: the detrend price series
+        """
+        if 'difference' == method:
+            detrended = self.dataframe.close[1:]-self.dataframe.close[:-1].values
+        
+        elif 'linear' == method:
+            x = np.arange(0, len(self.dataframe))
+            y = self.dataframe.close.values
+        
+            model = LinearRegression()
+            model.fit(x.reshape(-1,1),y.reshape(-1,1))
+            trend = model.predict(x.reshape(-1,1))
+            trend = trend.reshape((len(self.dataframe),))
+        
+            detrended = self.dataframe.close - trend
+        else:
+            print("Error - Not Valid Method for Detrending")
+        
+        return detrended
 
